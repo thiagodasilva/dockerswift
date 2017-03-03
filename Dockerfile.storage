@@ -1,0 +1,17 @@
+FROM centos:latest
+RUN yum update -y && yum install -y epel-release && yum install -y centos-release-openstack-newton
+RUN yum install -y supervisor openstack-swift-account openstack-swift-container openstack-swift-object && yum clean all
+
+
+RUN mkdir -p /srv/node/
+RUN chown -R swift:swift /srv/node/
+
+COPY config/swift/conf/*.conf /etc/swift/
+COPY config/swift/rings/*.gz /etc/swift/
+COPY config/supervisord-storage.conf /etc/supervisord.d/swift.ini
+
+EXPOSE 6200 6201 6202
+
+RUN yum clean all
+
+CMD ["/usr/bin/supervisord", "-n"]
