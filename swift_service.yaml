@@ -8,5 +8,5 @@ spec:
     - port: 8080
   # Label keys and values that must match in order to receive traffic for this service.
   selector:
-    name: swift-pod
+    name: swift-deployment
   type: NodePort

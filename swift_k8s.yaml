@@ -1,0 +1,45 @@
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: swift-proxy-deployment
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: swift-proxy
+    spec:
+      containers:
+      - name: proxy-container
+        image: thiagodasilva/swift-proxy:dev-v1
+        ports:
+        - containerPort: 8080
+---
+kind: DaemonSet
+apiVersion: extensions/v1beta1
+metadata:
+  name: swift-storage
+  labels:
+    swift: daemonset
+spec:
+  template:
+    metadata:
+      labels:
+        app: swift_storage_pod
+    spec:
+      nodeSelector:
+        storagenode: swift_storage
+      containers:
+      - name: storage-container
+        image: thiagodasilva/swift-storage:dev-v1
+        ports:
+        - containerPort: 6200
+        - containerPort: 6201
+        - containerPort: 6202
+        volumeMounts:
+        - mountPath: /srv/node/
+          name: swift-volume
+      volumes:
+      - name: swift-volume
+        hostPath:
+          path: /mnt/

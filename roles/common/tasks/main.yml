@@ -1,0 +1,57 @@
+- name: update CentOS
+  yum: name='*' state=latest
+
+- name: build hosts file
+  lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item].ansible_eth1.ipv4.address }} {{item}}" state=present
+  when: hostvars[item].ansible_eth1.ipv4.address is defined
+  with_items: "{{ groups['all'] }}"
+
+- name: disable selinux
+  selinux: state=disabled
+
+- name: disable of selinux - now
+  command: setenforce 0
+
+- name: install utility programs
+  yum: name={{ item }} state=present
+  with_items:
+    - wget
+    - screen
+    - epel-release
+    - git
+    - vim
+    - iptables
+    - iptables-utils
+    - iptables-services
+    - ncurses-term
+    - tree
+
+- name: setup kubernetes repo
+  copy: src=kubernetes.repo owner=root group=root dest=/etc/yum.repos.d
+
+- name: Ensure net.bridge.bridge-nf-call-iptables is set. See kubeadm
+  copy: src=k8s.conf owner=root group=root dest=/etc/sysctl.d/k8s.conf
+
+- name: install kube components
+  command: yum -y install docker kubelet kubeadm kubectl kubernetes-cni
+
+- name: enable kube services
+  service: name={{ item }} state=started enabled=yes
+  with_items:
+    - docker
+    - kubelet
+
+- name: save iptables
+  command: service iptables save
+
+- name: configure dm_snapshot module
+  copy: src=dm_snapshot.conf owner=root group=root mode=644 dest=/etc/modules-load.d
+
+- name: update kubernetes
+  get_url:
+    url: https://storage.googleapis.com/kubernetes-release/release/v{{ kubernetes_version }}/bin/linux/amd64/{{ item }}
+    dest: /usr/bin
+    mode: 0755
+  with_items:
+    - kubelet
+    - kubectl

@@ -1,0 +1,15 @@
+disk_additional_disks:
+- disk: /dev/sdb
+  fstype: xfs
+  mount_options: loop,noatime,nodiratime,nobarrier,logbufs=8
+  mount: /mnt/sdb1
+
+- disk: /dev/sdc
+  fstype: xfs
+  mount_options: loop,noatime,nodiratime,nobarrier,logbufs=8
+  mount: /mnt/sdc1
+
+- disk: /dev/sdd
+  fstype: xfs
+  mount_options: loop,noatime,nodiratime,nobarrier,logbufs=8
+  mount: /mnt/sdd1

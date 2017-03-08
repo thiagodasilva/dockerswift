@@ -1,0 +1,55 @@
+- name: install utility programs
+  yum: name={{ item }} state=present
+  with_items:
+    - centos-release-openstack-ocata
+    - python-swift
+    - python2-swiftclient
+
+- name: set correct terminal in bashrc
+  lineinfile:
+      dest: /home/vagrant/.bashrc
+      regexp: '^export TERM='
+      line: 'export TERM=xterm'
+
+- name: set correct editor in bashrc
+  lineinfile:
+      dest: /home/vagrant/.bashrc
+      regexp: '^export EDITOR='
+      line: 'export EDITOR=vim'
+
+- name: set kubectl alias in bashrc
+  lineinfile:
+      dest: /home/vagrant/.bashrc
+      regexp: '^alias kk='
+      line: 'alias kk=kubectl'
+
+- name: create
+  command: kubeadm init --token={{ kubernetes_token }} --use-kubernetes-version=v{{ kubernetes_version }}  --api-advertise-addresses={{ ansible_eth1.ipv4.address }}
+
+- name: get jq
+  command: wget http://stedolan.github.io/jq/download/linux64/jq
+
+- name: make jq executable
+  command: chmod +x jq
+
+- name: move jq to /usr/bin
+  command: cp jq /usr/bin
+
+- name: Fix kube-proxy
+  shell: kubectl -n kube-system get ds -l 'component=kube-proxy' -o json | jq '.items[0].spec.template.spec.containers[0].command |= .+ ["--proxy-mode=userspace"]' |   kubectl apply -f - && kubectl -n kube-system delete pods -l 'component=kube-proxy'
+
+- name: copy admin.conf
+  command: cp /etc/kubernetes/admin.conf /vagrant
+
+- name: create weave network
+  command: kubectl create -f https://git.io/weave-kube
+
+- name: get dns service address
+  shell: kubectl get services --all-namespaces | grep kube-dns | awk "{print \$3}"
+  register: kubednsaddress
+
+- name: wait for dns to be ready
+  wait_for: host={{ kubednsaddress.stdout }} port=53 state=started timeout=1800
+
+- name: save iptables
+  command: service iptables save
