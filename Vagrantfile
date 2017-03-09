@@ -7,6 +7,7 @@ DISKS = 4
 Vagrant.configure("2") do |config|
     config.ssh.insert_key = false
     config.vm.box = "centos/7"
+    config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
 
     # Override
     config.vm.provider :libvirt do |v,override|
