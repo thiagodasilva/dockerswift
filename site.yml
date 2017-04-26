@@ -21,4 +21,4 @@
     - "global_vars.yml"
   roles:
     - nodes 
-    - prepare_disks
+#    - prepare_disks

@@ -1,3 +1,7 @@
 ---
-kubernetes_version: 1.5.3
+kubernetes_version: 1.6.1
 kubernetes_token: abcdef.1234567890abcdef
+
+# https://kubernetes.io/docs/admin/addons/
+kubeadm_network_addon_url: http://docs.projectcalico.org/v2.1/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
+#kubeadm_network_addon_url: https://git.io/weave-kube-1.6

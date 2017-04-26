@@ -1,7 +1,9 @@
+- name: install cloud sig
+  package: name=centos-release-openstack-ocata state=present
+  
 - name: install utility programs
   yum: name={{ item }} state=present
   with_items:
-    - centos-release-openstack-ocata
     - python-swift
     - python2-swiftclient
 
@@ -24,28 +26,31 @@
       line: 'alias kk=kubectl'
 
 - name: create
-  command: kubeadm init --token={{ kubernetes_token }} --use-kubernetes-version=v{{ kubernetes_version }}  --api-advertise-addresses={{ ansible_eth1.ipv4.address }}
-
-- name: get jq
-  command: wget http://stedolan.github.io/jq/download/linux64/jq
-
-- name: make jq executable
-  command: chmod +x jq
-
-- name: move jq to /usr/bin
-  command: cp jq /usr/bin
-
-- name: Fix kube-proxy
-  shell: kubectl -n kube-system get ds -l 'component=kube-proxy' -o json | jq '.items[0].spec.template.spec.containers[0].command |= .+ ["--proxy-mode=userspace"]' |   kubectl apply -f - && kubectl -n kube-system delete pods -l 'component=kube-proxy'
-
+  command: kubeadm init --token={{ kubernetes_token }} --apiserver-advertise-address={{ ansible_eth1.ipv4.address }}
+  
 - name: copy admin.conf
-  command: cp /etc/kubernetes/admin.conf /vagrant
+  command: cp /etc/kubernetes/admin.conf /home/vagrant/
 
-- name: create weave network
-  command: kubectl create -f https://git.io/weave-kube
+- name: configure permissions for admin.conf
+  command: chown vagrant:vagrant /home/vagrant/admin.conf
+
+- name: set correct editor in bashrc
+  lineinfile:
+      dest: /home/vagrant/.bashrc
+      line: 'export KUBECONFIG=$HOME/admin.conf'
+
+
+- name: create cluster network
+  command: kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f {{ kubeadm_network_addon_url }}
+
+#- name: create cluster network - flannel rbac
+#  command: kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f {{ item }}
+#  with_items:
+#    - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml
+#    - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 
 - name: get dns service address
-  shell: kubectl get services --all-namespaces | grep kube-dns | awk "{print \$3}"
+  shell: kubectl --kubeconfig /etc/kubernetes/admin.conf get services --all-namespaces | grep kube-dns | awk "{print \$3}"
   register: kubednsaddress
 
 - name: wait for dns to be ready

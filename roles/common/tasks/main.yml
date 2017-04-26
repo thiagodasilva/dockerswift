@@ -35,23 +35,26 @@
 - name: install kube components
   command: yum -y install docker kubelet kubeadm kubectl kubernetes-cni
 
+- name: fix kubelet service init
+  lineinfile:
+      dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+      insertafter: '^Environment=\"KUBELET_AUTHZ_ARGS'
+      line: 'Environment="KUBELET_EXTRA_ARGS=--cgroup-driver=systemd"'
+
+- name: reload systemd
+  command: /usr/bin/systemctl --system daemon-reload
+
+  #- name: save iptables
+  #command: service iptables save
+
+- name: Reset any existing cluster
+  command: /usr/bin/kubeadm reset
+
 - name: enable kube services
   service: name={{ item }} state=started enabled=yes
   with_items:
     - docker
     - kubelet
 
-- name: save iptables
-  command: service iptables save
-
-- name: configure dm_snapshot module
-  copy: src=dm_snapshot.conf owner=root group=root mode=644 dest=/etc/modules-load.d
-
-- name: update kubernetes
-  get_url:
-    url: https://storage.googleapis.com/kubernetes-release/release/v{{ kubernetes_version }}/bin/linux/amd64/{{ item }}
-    dest: /usr/bin
-    mode: 0755
-  with_items:
-    - kubelet
-    - kubectl
+#- name: configure dm_snapshot module
+#  copy: src=dm_snapshot.conf owner=root group=root mode=644 dest=/etc/modules-load.d

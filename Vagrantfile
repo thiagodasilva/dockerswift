@@ -6,6 +6,7 @@ DISKS = 4
 
 Vagrant.configure("2") do |config|
     config.ssh.insert_key = false
+    #config.vm.box = "bento/centos-7.3"
     config.vm.box = "centos/7"
     config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
 
@@ -37,18 +38,20 @@ Vagrant.configure("2") do |config|
             node.vm.network :private_network, ip: "192.168.10.10#{i}"
 
             # Settings for Virtualbox
-            node.vm.provider :virtualbox do |vb|
-                unless File.exist?("disk-#{i}-0.vdi")
-                    vb.customize ["storagectl", :id,"--name", "VboxSata", "--add", "sata"]
-                end
-            end
+            #node.vm.provider :virtualbox do |vb|
+            #    unless File.exist?("disk-#{i}-0.vdi")
+            #        vb.customize ["storagectl", :id,"--name", "VboxSata", "--add", "sata"]
+            #    end
+            #end
 
             (0..DISKS-1).each do |d|
                 node.vm.provider :virtualbox do |vb|
                     unless File.exist?("disk-#{i}-#{d}.vdi")
-                        vb.customize [ "createmedium", "--filename", "disk-#{i}-#{d}.vdi", "--size", 1024*1024 ]
+                        #vb.customize [ "createmedium", "--filename", "disk-#{i}-#{d}.vdi", "--size", 1024*1024 ]
+                        vb.customize [ "createhd", "--filename", "disk-#{i}-#{d}.vdi", "--size", 1024*1024 ]
                     end
-                    vb.customize [ "storageattach", :id, "--storagectl", "VboxSata", "--port", 3+d, "--device", 0, "--type", "hdd", "--medium", "disk-#{i}-#{d}.vdi" ]
+                    #vb.customize [ "storageattach", :id, "--storagectl", "VboxSata", "--port", 3+d, "--device", 0, "--type", "hdd", "--medium", "disk-#{i}-#{d}.vdi" ]
+                    vb.customize [ "storageattach", :id, "--storagectl", "IDE", "--port", "1", "--device", "1", "--type", "hdd", "--medium", "disk-#{i}-#{d}.vdi" ]
                     vb.memory = 2048
                     vb.cpus = 2
                 end
