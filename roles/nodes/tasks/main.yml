@@ -16,5 +16,6 @@
 - name: join with master
   command: kubeadm join --token={{ kubernetes_token }} {{ hostvars['master'].ansible_eth1.ipv4.address }}:6443
 
+#route add 10.96.0.1 gw 10.30.3.41
 - name: save iptables
   command: service iptables save

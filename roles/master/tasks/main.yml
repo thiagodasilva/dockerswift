@@ -39,15 +39,20 @@
       dest: /home/vagrant/.bashrc
       line: 'export KUBECONFIG=$HOME/admin.conf'
 
+- name: get jq
+  command: wget http://stedolan.github.io/jq/download/linux64/jq
+
+- name: make jq executable
+  command: chmod +x jq
+
+- name: move jq to /usr/bin
+  command: mv jq /usr/bin
+
+- name: Fix kube-proxy
+  shell: kubectl --kubeconfig /etc/kubernetes/admin.conf -n kube-system get ds -l 'k8s-app=kube-proxy' -o json | jq '.items[0].spec.template.spec.containers[0].command |= .+ ["--proxy-mode=userspace"]' |   kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f - && kubectl --kubeconfig /etc/kubernetes/admin.conf -n kube-system delete pods -l 'k8s-app=kube-proxy'
 
 - name: create cluster network
   command: kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f {{ kubeadm_network_addon_url }}
-
-#- name: create cluster network - flannel rbac
-#  command: kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f {{ item }}
-#  with_items:
-#    - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml
-#    - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 
 - name: get dns service address
   shell: kubectl --kubeconfig /etc/kubernetes/admin.conf get services --all-namespaces | grep kube-dns | awk "{print \$3}"
