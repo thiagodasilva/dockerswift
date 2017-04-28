@@ -1,0 +1,28 @@
+FROM centos:latest
+RUN yum update -y && yum install -y epel-release && yum install -y centos-release-openstack-newton
+RUN yum install -y openstack-swift-proxy && yum clean all
+RUN yum install -y git-core python-pip gcc redhat-rpm-config \
+ python-setuptools python-devel python-greenlet python2-paste-deploy \
+ python-netifaces python-dns simplejson pyxattr python-eventlet \
+ python-dns python-mock make autoconf automake libtool openssl-devel sysstat \
+ rsync xfsprogs libffi-devel xinetd
+
+#RUN git clone https://github.com/pandemicsyn/swift-ring-master.git
+COPY swift-ring-master/ swift-ring-master/
+RUN cd swift-ring-master && python setup.py install
+
+
+COPY config/ring_master/ring-master.conf-sample /etc/swift/ring-master.conf
+COPY config/swift/conf/*.conf /etc/swift/
+COPY config/swift/rings/cluster_sample.json /etc/swift_config/cluster_topology.json
+COPY config/swift/rings/make_rings2.sh /etc/swift/
+COPY config/swift/rings/build_rings.py /etc/swift/
+
+RUN yum clean all
+
+RUN mkdir -p /var/log/ring-master && chown swift:swift /var/log/ring-master
+RUN mkdir -p /var/run/ring-master && chown swift:swift /var/run/ring-master
+
+EXPOSE 8090
+
+CMD ["/etc/swift/make_rings2.sh"]

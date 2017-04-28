@@ -1,0 +1,72 @@
+[ringmasterd]
+#user to run as
+#user = swift
+
+#standard swift logger settings
+log_facility = LOG_LOCAL2
+
+#swiftdir = /etc/swift
+
+#If this path exists orchestration will pause until the file is removed
+#pause_file_path = /tmp/.srm-pause
+
+# path to your builder files
+#account_builder = /etc/swift/account.builder
+#container_builder = /etc/swift/container.builder
+#object_builder = /etc/swift/object.builder
+
+# path to your ring files
+#account_ring = /etc/swift/account.ring.gz
+#container_ring = /etc/swift/container.ring.gz
+#object_ring = /etc/swift/object.ring.gz
+
+# where to backup builder and ring files
+#backup_dir = /etc/swift/backups
+
+# weight shift [in|de]crement (by how much to change the weight on a pass)
+#weight_shift = 10.0
+
+# how often to check for changes
+#interval = 120
+
+# how long to wait to check again after making a change
+#change_interval = 3600
+
+# Only make changes during this time window
+# i.e.:  0615,1140 would only allow changes between 6:15am and 11:40am
+#change_window = 0000,2400
+
+# Ring balance threshold. Above this value we'll simply keep try to rebalance
+# on each pass before making further changes
+#balance_threshold = 2.0
+
+# minimum time we must wait after a builder file has been externally changed
+# if you're adding nodes this gives you a grace period to make changes before
+# ring orchestration kicks in and starts deploying the ring
+#min_seconds_since_change = 120
+
+# Path to the swift dispersion report binary
+#dispersion_cmd = /usr/bin/swift-dispersion-report
+# dispersion report pct found thresholds
+# if a disperion report finds less than this pct no change will be made
+#container_min_pct = 99.75
+#object_min_pct = 99.75
+
+[ringmaster_wsgi]
+# user to run as
+#user = swift
+# The wsgi app doesn't use syslog, it uses a 7 day rotating log file
+#log_path = /var/log/ring-master/wsgi.log
+#swiftdir = /etc/swift
+# Listen on this port
+#server_ring_port = 8090
+# Bind to this address (or empty for all)
+#server_ring_address =
+#
+# If you want to send an email notification when a new ring file is written
+# adjust these config options
+#email_notify = n
+#smtplib_host = localhost
+#smtplib_port = 25
+#smtplib_from_addr = ringmaster@localhost
+#smtplib_recipients = user@domain.com,user2@domain2.com

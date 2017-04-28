@@ -1,0 +1,19 @@
+FROM centos:latest
+RUN yum update -y && yum install -y epel-release && yum install -y centos-release-openstack-newton
+RUN yum install -y openstack-swift-proxy && yum clean all
+RUN yum install -y git-core python-pip gcc redhat-rpm-config \
+ python-setuptools python-devel python-greenlet python2-paste-deploy \
+ python-netifaces python-dns simplejson pyxattr python-eventlet \
+ python-dns python-mock make autoconf automake libtool openssl-devel sysstat \
+ rsync xfsprogs libffi-devel xinetd
+
+COPY swift-ring-master/ swift-ring-master/
+RUN cd swift-ring-master && python setup.py install
+
+COPY config/ring_master/ring-minion.conf-sample /etc/swift_config/ring-minion.conf
+COPY config/ring_master/start_minion.sh /etc/swift_config/start_minion.sh
+COPY config/swift/conf/*.conf /etc/swift_config/
+
+RUN yum clean all
+
+CMD ["/etc/swift_config/start_minion.sh"]
