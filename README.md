@@ -1,4 +1,4 @@
-dockerswift
+kubernetes-swift
 ===========
 
 Simple PoC to run a small swift cluster in Kubernetes.
@@ -6,28 +6,37 @@ Simple PoC to run a small swift cluster in Kubernetes.
 Usage
 -----
 
-### Install and start minikube to run Kubernetes locally inside a VM:
+### Start the kubernetes cluster using the Vagrantfile
 
-  * Follow directions here: https://kubernetes.io/docs/getting-started-guides/minikube/
+  * `./up.sh`
 
-### Build the image:
+  This will start 4 VMs and configure kubernetes with 1 master and 3 worker
+  nodes. Once provisioning is complete, the admin.conf file will be copied to
+  /vagrant in the master node, which will allow for accessing the kubernetes
+  cluster from the host machine.
 
-  1. `docker build -t swift-storage:v1 -f ./Dockerfile.storage .`
-  1. `docker build -t swift-proxy:v1 -f ./Dockerfile.proxy .`
+  To access the kubernetes cluster, install kubectl and set the enviroment
+  variable like:
 
-### Build the rings:
+  * `export KUBECONFIG=/home/thiago/Projects/kubernetes-swift/admin.conf`
+  * `kubectl get nodes`
 
-  1. `cd config/swift/rings && ./make_rings.sh && cd ../../..`
+### Create Swift cluster with Quartermaster
 
-### Run cluster:
+After provisioning the kubernetes cluster and configuring kubectl, run
+quartermaster and deploy the swift cluster:
 
-  1. `kubectl create -f swift_pod.yaml`
-  1. `kubectl create -f swift_service.yaml`
-  
-### Test cluster:
+  1. `kubectl run -n kube-system kube-qm --image=thiagodasilva/qm`
+  1. `kubectl create -f swift-cluster.yaml`
+  1. `kubectl get all`
 
-  1. `kubectl get services`
-  1. `minikube service swiftservice --url`
-  1. `curl -i http://192.168.99.100:32499/info`  <---- update IP
+Now test the Swift cluster:
+
+  1. `kubectl get svc`
+  1. `curl -i http://192.168.10.90:32499/info`  <---- update port
   1. `echo "hello world" > hw`
-  1. `swift -A http://192.168.99.100:32499/auth/v1.0 -U admin:admin -K admin upload c1 hw`
+  1. `swift -A http://192.168.10.90:32499/auth/v1.0 -U admin:admin -K admin upload c1 hw`
+
+Checkout this asciicast for a demo of deploying quartermaster and swift cluster:
+
+[![asciicast](https://asciinema.org/a/118177.png)](https://asciinema.org/a/118177?speed=2&autoplay=1)

@@ -1,3 +1,6 @@
+# This is how you define your swift cluster topology
+# Note: the yaml file only defines the storage nodes
+# The proxy container is started by quartermaster
 apiVersion: storage.coreos.com/v1alpha1
 kind: StorageCluster
 metadata:
